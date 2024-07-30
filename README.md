@@ -5,8 +5,7 @@ A very quick and dirty tool to generate graphviz diagrams from Swift Package Man
 ## Install
 
 ```bash
-git clone <TODO>
-cargo install --path .
+cargo install --git https://github.com/schwa/spm_to_graph
 ```
 
 graphviz _must_ be installed on your system.
