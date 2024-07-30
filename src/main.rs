@@ -123,7 +123,7 @@ pub struct Rule {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Copy {}
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TargetType {
     Executable,
@@ -137,9 +137,18 @@ pub enum TargetType {
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// Optional name to operate on
+    /// Directory containing the Swift package
     input: Option<PathBuf>,
+    /// Output file, defaults to package name with .dot extension
     output: Option<PathBuf>,
+
+    #[clap(long)]
+    /// Skip unit test targets
+    skip_test_targets: bool,
+
+    #[clap(long)]
+    /// Skip external product dependencies
+    skip_product_dependencies: bool,
 }
 
 fn main() {
@@ -155,34 +164,54 @@ fn main() {
 
     let mut statements = StmtList::new();
 
-    // for dependency in package.dependencies {
-    //     statements = statements.add_node(
-    //         Identity::id(&dependency.identity).unwrap(),
-    //         None,
-    //         Some(AttrList::new().add_pair(color(Color::Red))),
-    //     );
-    // }
-
     for target in package.targets {
-        statements = statements.add_node(Identity::id(&target.name).unwrap(), None, Some(AttrList::new().add_pair(color(Color::Black)).add_pair(shape(Shape::Box))));
+        if cli.skip_test_targets && target.target_type == TargetType::Test {
+            continue;
+        }
 
+        statements = statements.add_node(
+            Identity::id(&target.name).unwrap(),
+            None,
+            Some(
+                AttrList::new()
+                    .add_pair(color(Color::Black))
+                    .add_pair(shape(Shape::Box)),
+            ),
+        );
 
         for target_dependency in target.target_dependencies.unwrap_or_default() {
-            statements = statements.add_node(Identity::id(&target_dependency).unwrap(), None, Some(AttrList::new().add_pair(color(Color::Black)).add_pair(shape(Shape::Box))));
+            statements = statements.add_node(
+                Identity::id(&target_dependency).unwrap(),
+                None,
+                Some(
+                    AttrList::new()
+                        .add_pair(color(Color::Black))
+                        .add_pair(shape(Shape::Box)),
+                ),
+            );
 
             statements = statements.add_edge(
                 Edge::head_node(Identity::id(&target.name).unwrap(), None)
                     .arrow_to_node(Identity::id(&target_dependency).unwrap(), None),
             );
         }
-        for product_dependency in target.product_dependencies.unwrap_or_default() {
+        if !cli.skip_product_dependencies {
+            for product_dependency in target.product_dependencies.unwrap_or_default() {
+                statements = statements.add_node(
+                    Identity::id(&product_dependency).unwrap(),
+                    None,
+                    Some(
+                        AttrList::new()
+                            .add_pair(color(Color::Blue))
+                            .add_pair(shape(Shape::Box)),
+                    ),
+                );
 
-            statements = statements.add_node(Identity::id(&product_dependency).unwrap(), None, Some(AttrList::new().add_pair(color(Color::Blue)).add_pair(shape(Shape::Box))));
-
-            statements = statements.add_edge(
-                Edge::head_node(Identity::id(&target.name).unwrap(), None)
-                    .arrow_to_node(Identity::id(&product_dependency).unwrap(), None),
-            );
+                statements = statements.add_edge(
+                    Edge::head_node(Identity::id(&target.name).unwrap(), None)
+                        .arrow_to_node(Identity::id(&product_dependency).unwrap(), None),
+                );
+            }
         }
     }
     let graph = GraphBuilder::default()

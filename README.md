@@ -18,6 +18,20 @@ brew install graphviz
 
 ## Usage
 
+```plaintext
+Usage: spm_to_graph [OPTIONS] [INPUT] [OUTPUT]
+
+Arguments:
+  [INPUT]   Optional name to operate on
+  [OUTPUT]
+
+Options:
+      --skip-test-targets
+      --skip-product-dependencies
+  -h, --help                       Print help
+  -V, --version                    Print version
+  ```
+
 ```bash
 spm_to_graph <path-to-package> <output-file>
 ```
