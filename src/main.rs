@@ -14,7 +14,6 @@ pub struct Package {
     path: String,
     platforms: Vec<Platform>,
     products: Vec<Product>,
-    swift_languages_versions: Vec<String>,
     targets: Vec<Target>,
     tools_version: String,
 }
