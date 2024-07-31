@@ -1,128 +1,29 @@
 use clap::Parser;
-use serde::{de, Deserialize, Serialize};
+use serde::Deserialize;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::Command;
 use tabbycat::attributes::*;
-use tabbycat::{AttrList, Edge, GraphBuilder, GraphType, Identity, StmtList, SubGraph};
+use tabbycat::{AttrList, Edge, GraphBuilder, GraphType, Identity, StmtList};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Package {
-    dependencies: Vec<Dependency>,
-    manifest_display_name: String,
     name: String,
-    path: String,
-    platforms: Vec<Platform>,
-    products: Vec<Product>,
     targets: Vec<Target>,
-    tools_version: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Dependency {
-    identity: String,
-    requirement: Requirement,
-    #[serde(rename = "type")]
-    dependency_type: DependencyType,
-    url: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum DependencyType {
-    #[serde(rename = "sourceControl")]
-    SourceControl,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Requirement {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    range: Option<Vec<Range>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    branch: Option<Vec<String>>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Range {
-    lower_bound: String,
-    upper_bound: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Platform {
-    name: String,
-    version: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Product {
-    name: String,
-    targets: Vec<String>,
-    #[serde(rename = "type")]
-    product_type: TypeClass,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TypeClass {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    library: Option<Vec<Library>>,
-    executable: Option<serde_json::Value>,
-    #[serde(rename = "macro")]
-    type_macro: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Library {
-    Automatic,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Target {
-    #[serde(rename = "c99name")]
-    c99_name: String,
-    module_type: ModuleType,
     name: String,
-    path: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    product_memberships: Option<Vec<String>>,
-    sources: Vec<String>,
     #[serde(rename = "type")]
     target_type: TargetType,
     #[serde(skip_serializing_if = "Option::is_none")]
     product_dependencies: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     target_dependencies: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    resources: Option<Vec<Resource>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub enum ModuleType {
-    #[serde(rename = "ClangTarget")]
-    ClangTarget,
-    #[serde(rename = "SwiftTarget")]
-    SwiftTarget,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Resource {
-    path: String,
-    rule: Rule,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Rule {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    copy: Option<Copy>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    process: Option<Copy>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Copy {}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TargetType {
     Executable,
